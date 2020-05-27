@@ -50,6 +50,26 @@ plt.xlim([0, freqs.max()])
 # plt.show()
 sns.despine()
 
+
+freqs1, psd1 = signal.welch(data, sf, 'flattop', 1024, scaling='spectrum')
+plt.figure()
+plt.semilogy(freqs1, np.sqrt(psd1))
+plt.xlabel('frequency [Hz]')
+plt.ylabel('Linear spectrum [V RMS]')
+plt.title('Power spectrum (scipy.signal.welch)')
+plt.show()
+
+
+freqs2 = np.fft.fftfreq(time.size, 1/sf)
+idx = np.argsort(freqs2)
+ps2 = np.abs(np.fft.fft(data))**2
+plt.figure()
+plt.plot(freqs2[idx], ps2[idx])
+plt.title('Power spectrum (np.fft.fft)')
+
+
+
+
 # Define delta lower and upper limits
 low, high = 0.5, 4
 
@@ -65,7 +85,7 @@ plt.ylabel('Power spectral density (uV^2 / Hz)')
 plt.xlim([0, 10])
 plt.ylim([0, psd.max() * 1.1])
 plt.title("Welch's periodogram")
-# plt.show()
+plt.show()
 sns.despine()
 
 from scipy.integrate import simps
