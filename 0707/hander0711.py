@@ -20,7 +20,7 @@ import numpy as np
 from scipy import signal, fftpack
 
 class Hander_index():
-    def __init__(self, time, info, info_name, weaken_length,out_file):
+    def __init__(self, time, info, info_name, weaken_length,out_file=None):
         self.time = time
         self.info = info
         self.info_name = info_name
@@ -93,7 +93,18 @@ class Hander_index():
         right_amp_10_index = self.__get_near_index1(right_amp_10, top_index, right_blow_index)
         # right_amp_90_index = self.info[top_index:right_blow_index].index(right_amp_90)
         # right_amp_10_index = self.info[top_index:right_blow_index].index(right_amp_10)
-        slope_90_10 = (right_amp_90 - right_amp_10) / (self.time[right_amp_90_index] - self.time[right_amp_10_index])
+        right_slope = (right_amp_90 - right_amp_10) / (self.time[right_amp_90_index] - self.time[right_amp_10_index])
+        
+        left_blow_value  = min(self.info[p1:top_index])
+        left_blow_index = self.info[p1:top_index].index(left_blow_value)+p1
+        left_amp = top_value - left_blow_value
+        left_amp_90 = left_blow_value +left_amp * 0.9
+        left_amp_10 = left_blow_value + left_amp * 0.1
+        left_amp_90_index = self.__get_near_index1(left_amp_90, left_blow_index, top_index)
+        left_amp_10_index = self.__get_near_index1(left_amp_10, left_blow_index, top_index)
+        left_slope = (left_amp_90 - left_amp_10)/(self.time[left_amp_90_index] - self.time[left_amp_10_index])
+
+        
 
         # https://blog.csdn.net/cxu123321/article/details/101000604
         # x = np.array(range(right_amp_90_index-top_index,right_amp_10_index-top_index,10))
@@ -115,7 +126,7 @@ class Hander_index():
         # plt.plot(x,y)
 
         self.out_file.write(' '.join(
-            map(str, [p1, p2, time_s, time_e, top_value, top_index, amp, slope_90_10, t_half, auc, a, b, c])) + '\n')
+            map(str, [p1, p2, time_s, time_e, top_value, top_index, amp, left_slope, right_slope, t_half, auc, a, b, c])) + '\n')
         # print(
         #     "for [{}:{}]/[{}:{}], the top-value is {} with index {}, the Amplitude is {}, slope is {}, T_half is {}, AUC is {}, a = {}. b={}.c={}".format(
         #         p1, p1, time_s, time_e, top_value, top_index, amp, slope_90_10, t_half, auc,a,b,c))
@@ -146,7 +157,9 @@ class Hander_index():
 
 if __name__ == '__main__':
     file_No = '003'
-    func = 2
+    func = 3
+
+
     file = open('samples-' + file_No + '.txt', 'r')
     info = file.readlines()
     print(len(info))
@@ -161,11 +174,11 @@ if __name__ == '__main__':
     cab = list(data_array[:, 1])
     ca = list(data_array[:, 2])
 
-    outfile = open('res-'+file_No+'.txt', 'w')
-    outfile.write('p1 p2 time1 time2 top_value top_index amp,slope t_half auc a b c\n')
-    hander = Hander_index(time, ca, 'ca', 4000,outfile)
 
     if func == 1:  ##提取参数信息
+        outfile = open('res-' + file_No + '.txt', 'w')
+        outfile.write('p1 p2 time1 time2 top_value top_index amp slope_left slope_right t_half auc a b c\n')
+        hander = Hander_index(time, ca, 'ca', 4000, outfile)
         segfile = open('peak-' + file_No + '.txt', 'r')
         seg_data = segfile.readlines()
         for line in seg_data:
@@ -174,7 +187,19 @@ if __name__ == '__main__':
             hander.get_paras_for_mountain(left, right)
 
     elif func == 2:
+        hander = Hander_index(time, ca, 'ca', 4000)
         hander.full_signal() #绘制全局曲线.
+
+
+    elif func == 3: #指定起始位, 提出参数
+        spe_file = open('res_spe-'+file_No+'.txt','a')
+        spe_file.write('p1 p2 time1 time2 top_value top_index amp slope_left slope_right t_half auc a b c\n')
+        hander = Hander_index(time, ca, 'ca', 4000, spe_file)
+        # 手动输入起止点的index
+        left = 7248
+        right = 7996
+        hander.get_paras_for_mountain(left,right)
+
 
 
 

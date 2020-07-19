@@ -34,23 +34,24 @@ plot([x])
 xs = signal.savgol_filter(x, window_length=333, polyorder=3)
 # height: 波峰的最小高度
 # distance: 波峰之间的最小距离
-peaks, _ = signal.find_peaks(x, height=1.35, distance=50)
+peaks, _ = signal.find_peaks(x, height=0.61, distance=1500)
+print(len(peaks))
 left = np.zeros_like(peaks, dtype='int')
 right = np.zeros_like(peaks, dtype='int')
-
+threshold_smooth = 0
 threshold = 300 # 波峰的最小宽度/2
 for i, idx in enumerate(peaks):
     j = idx - threshold
-    while xs[j] < xs[j+1]:
+    while xs[j] < xs[j+1]+ threshold_smooth and j>0 and j<len(x)-1:
         j -= 1
     left[i] = j
     j = idx + threshold
-    while xs[j] < xs[j-1]:
+    while xs[j] < xs[j-1]+threshold_smooth and j>0 and j<len(x)-1:
         j += 1
 
     right[i] = j
 
-plt.figure(figsize=(20, 3))
+plt.figure(figsize=(20, 3),dpi=300)
 for i, idx in enumerate(peaks):
     # plt.axvline(idx, lw=0.1, c='red')
     plt.axvline(left[i], lw=0.1, c='green')
